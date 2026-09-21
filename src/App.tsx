@@ -164,14 +164,8 @@ function ProductVideoMockup() {
   const toggle = () => {
     const v = videoRef.current
     if (!v) return
-
-    if (v.paused) {
-      v.play().catch(() => {
-        setPlaying(false)
-      })
-    } else {
-      v.pause()
-    }
+    if (v.paused) { v.play(); setPlaying(true) }
+    else { v.pause(); setPlaying(false) }
   }
 
   const onTimeUpdate = () => {
@@ -182,17 +176,15 @@ function ProductVideoMockup() {
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
     const v = videoRef.current
-    if (!v || !v.duration) return
-
+    if (!v) return
     const rect = e.currentTarget.getBoundingClientRect()
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const pct = (e.clientX - rect.left) / rect.width
     v.currentTime = pct * v.duration
   }
 
   const toggleMute = () => {
     const v = videoRef.current
     if (!v) return
-
     v.muted = !v.muted
     setMuted(v.muted)
   }
@@ -204,34 +196,30 @@ function ProductVideoMockup() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Actual MP4 video */}
-      <div
-        style={{
-          borderRadius: '20px',
-          overflow: 'hidden',
-          boxShadow: '0 28px 72px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.07)',
-          border: `1px solid ${C.border}`,
-          background: '#000',
-          aspectRatio: '16 / 9',
-          position: 'relative',
-        }}
-      >
+      {/* Outer frame */}
+      <div style={{
+        borderRadius: '20px',
+        overflow: 'hidden',
+        boxShadow: '0 28px 72px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.07)',
+        border: `1px solid ${C.border}`,
+        background: '#000',
+        aspectRatio: '16 / 9',
+        position: 'relative',
+      }}>
         <video
           ref={videoRef}
           src={heroVideo}
           className="w-full h-full object-cover"
           style={{ display: 'block' }}
-          muted={muted}
+          muted
           loop
           playsInline
-          preload="metadata"
           onTimeUpdate={onTimeUpdate}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
         />
 
-        {/* Bottom gradient */}
+        {/* Gradient overlay — bottom only, for controls legibility */}
         <div
           className="absolute bottom-0 left-0 right-0"
           style={{
@@ -243,7 +231,7 @@ function ProductVideoMockup() {
           }}
         />
 
-        {/* Centre play button */}
+        {/* Centre play button — shown when paused */}
         {!playing && (
           <div
             className="absolute inset-0 flex items-center justify-center cursor-pointer"
@@ -252,9 +240,7 @@ function ProductVideoMockup() {
             <div
               className="flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
               style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
+                width: '64px', height: '64px', borderRadius: '50%',
                 background: 'rgba(255,255,255,0.92)',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
               }}
@@ -266,19 +252,17 @@ function ProductVideoMockup() {
           </div>
         )}
 
-        {/* Controls */}
+        {/* Controls bar — visible on hover */}
         <div
           className="absolute bottom-0 left-0 right-0 px-4 pb-3 pt-2 flex items-center gap-3 transition-opacity duration-200"
           style={{ opacity: hovered ? 1 : 0 }}
         >
+          {/* Play/pause */}
           <button
             onClick={toggle}
-            aria-label={playing ? 'Pause video' : 'Play video'}
             className="flex items-center justify-center flex-shrink-0 transition-transform hover:scale-110"
             style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
+              width: '32px', height: '32px', borderRadius: '50%',
               background: 'rgba(255,255,255,0.15)',
               border: '1px solid rgba(255,255,255,0.25)',
               color: '#fff',
@@ -287,69 +271,49 @@ function ProductVideoMockup() {
           >
             {playing ? (
               <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-                <rect x="6" y="4" width="4" height="16" />
-                <rect x="14" y="4" width="4" height="16" />
+                <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
               </svg>
             ) : (
               <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-                <polygon points="5 3 19 12 5 21 5 3" />
+                <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
             )}
           </button>
 
+          {/* Progress bar */}
           <div
             className="flex-1 rounded-full cursor-pointer"
-            style={{
-              height: '4px',
-              background: 'rgba(255,255,255,0.25)',
-              position: 'relative',
-            }}
+            style={{ height: '4px', background: 'rgba(255,255,255,0.25)', position: 'relative' }}
             onClick={seek}
-            role="slider"
-            aria-label="Video progress"
           >
             <div
               className="absolute left-0 top-0 h-full rounded-full"
-              style={{
-                width: `${progress}%`,
-                background: C.indigo,
-                transition: 'width 0.1s linear',
-              }}
+              style={{ width: `${progress}%`, background: C.indigo, transition: 'width 0.1s linear' }}
             />
           </div>
 
+          {/* Mute */}
           <button
             onClick={toggleMute}
-            aria-label={muted ? 'Unmute video' : 'Mute video'}
             className="flex items-center justify-center flex-shrink-0 transition-opacity hover:opacity-80"
-            style={{
-              color: '#fff',
-              cursor: 'pointer',
-              background: 'transparent',
-              border: 'none',
-            }}
+            style={{ color: '#fff', cursor: 'pointer', background: 'transparent', border: 'none' }}
           >
             {muted ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                <line x1="23" y1="9" x2="17" y2="15" />
-                <line x1="17" y1="9" x2="23" y2="15" />
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
               </svg>
             ) : (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/>
               </svg>
             )}
           </button>
 
-          <div
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full flex-shrink-0"
-            style={{
-              background: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.2)',
-            }}
-          >
+          {/* FlowAI badge */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full flex-shrink-0"
+            style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>
             <div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: C.indigo }}>
               <ZapIcon size={9} />
             </div>
@@ -358,17 +322,13 @@ function ProductVideoMockup() {
         </div>
       </div>
 
-      {/* Caption */}
+      {/* Caption below */}
       <div className="flex items-center justify-between mt-3 px-1">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full animate-pulse-dot" style={{ background: C.mint }} />
-          <span className="text-xs font-medium" style={{ color: C.textSub }}>
-            Live product demo · FlowAI Workspace
-          </span>
+          <span className="text-xs font-medium" style={{ color: C.textSub }}>Live product demo · FlowAI Workspace</span>
         </div>
-        <span className="text-xs" style={{ color: C.textMuted }}>
-          See AI automation in action
-        </span>
+        <span className="text-xs" style={{ color: C.textMuted }}>See AI automation in action</span>
       </div>
     </div>
   )
@@ -398,8 +358,8 @@ function Hero() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-28 pb-20 relative">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-8 items-center">
 
-          {/* Left — 40% */}
-          <div className="w-full lg:w-[40%] flex-shrink-0 animate-fade-up">
+          {/* Left — 35% */}
+          <div className="w-full lg:w-[35%] flex-shrink-0 animate-fade-up">
             {/* Eyebrow */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5 text-xs font-semibold"
               style={{ background: C.indigoLight, color: C.indigo, border: `1px solid ${C.indigo}20` }}>
@@ -453,19 +413,13 @@ function Hero() {
             </div>
           </div>
 
-          {/* Right — 60% product video */}
-          <div className="w-full lg:w-[60%] relative">
+          {/* Right — 65% product video */}
+          <div className="w-full lg:w-[65%] relative">
             <ProductVideoMockup />
           </div>
         </div>
       </div>
 
-      {/* Next section peek */}
-      <div className="text-center py-6" style={{ borderTop: `1px solid rgba(0,0,0,0.06)` }}>
-        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: C.textMuted }}>
-          Trusted by teams building what's next
-        </p>
-      </div>
     </section>
   )
 }
@@ -473,6 +427,15 @@ function Hero() {
 // ─── Social Proof ─────────────────────────────────────────────────────────────
 function SocialProof() {
   const logos = ['Vercel', 'Axiom', 'Prisma', 'Resend', 'Supabase', 'Clerk']
+  const [activeIdx, setActiveIdx] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setActiveIdx(i => (i + 1) % logos.length)
+    }, 1400)
+    return () => clearInterval(id)
+  }, [logos.length])
+
   return (
     <section className="py-12" style={{ background: C.white, borderBottom: `1px solid ${C.border}` }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -480,11 +443,23 @@ function SocialProof() {
           Trusted by teams building what's next
         </p>
         <div className="flex flex-wrap justify-center items-center gap-8 lg:gap-14">
-          {logos.map(logo => (
-            <span key={logo} className="text-lg font-bold cursor-default transition-colors"
-              style={{ color: C.gray200, letterSpacing: '-0.02em' }}
-              onMouseEnter={e => (e.currentTarget.style.color = C.textMuted)}
-              onMouseLeave={e => (e.currentTarget.style.color = C.gray200)}>
+          {logos.map((logo, i) => (
+            <span
+              key={logo}
+              className="text-lg font-bold cursor-default"
+              style={{
+                letterSpacing: '-0.02em',
+                color: i === activeIdx ? C.indigo : C.textSub,
+                opacity: i === activeIdx ? 1 : 0.72,
+                textShadow: i === activeIdx
+                  ? `0 0 14px rgba(79,70,229,0.55), 0 0 28px rgba(79,70,229,0.25)`
+                  : 'none',
+                transition: 'color 0.45s ease, opacity 0.45s ease, text-shadow 0.45s ease, transform 0.45s ease',
+                transform: i === activeIdx ? 'scale(1.08) translateY(-1px)' : 'scale(1)',
+                display: 'inline-block',
+                willChange: 'color, opacity, transform, text-shadow',
+              }}
+            >
               {logo}
             </span>
           ))}
