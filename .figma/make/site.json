@@ -1,0 +1,10 @@
+{
+  "description": "Offers a visually appealing, user-friendly website designed to engage visitors and provide seamless navigation for an enhanced online experience.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
