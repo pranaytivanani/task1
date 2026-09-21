@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -152,208 +152,183 @@ function Navbar() {
   )
 }
 
-// ─── Product Video Mockup ─────────────────────────────────────────────────────
+// ─── Product Video Player ─────────────────────────────────────────────────────
 function ProductVideoMockup() {
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [playing, setPlaying] = useState(false)
-  const rows = [
-    { avatar: 'F', color: C.indigo, name: 'Finalize Q3 roadmap', assignee: 'Fumo Idupora · Remindhand', date: '08 18, 2023', status: 'Completed' },
-    { avatar: 'F', color: '#8B5CF6', name: 'Finalize Q3 roadmap', assignee: 'Fumo Idupora · Remindhand', date: '08 15, 2023', status: 'Completed' },
-    { avatar: 'A', color: C.mint, name: 'Don\'t complete the stor...', assignee: 'Elasco Idupora · Remindhand', date: '08 18, 2023', status: 'Completed' },
-    { avatar: 'B', color: '#F59E0B', name: 'Elatro deep tooling', assignee: 'Elasco Idupora · Toontran', date: '08 18, 2023', status: 'Completed' },
-    { avatar: 'D', color: '#EF4444', name: 'Daed lo deserce', assignee: 'Datacolumns · Dacculta It.', date: '', status: 'Completed' },
-  ]
+  const [progress, setProgress] = useState(0)
+  const [muted, setMuted] = useState(true)
+  const [hovered, setHovered] = useState(false)
+
+  const toggle = () => {
+    const v = videoRef.current
+    if (!v) return
+    if (v.paused) { v.play(); setPlaying(true) }
+    else { v.pause(); setPlaying(false) }
+  }
+
+  const onTimeUpdate = () => {
+    const v = videoRef.current
+    if (!v || !v.duration) return
+    setProgress((v.currentTime / v.duration) * 100)
+  }
+
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const v = videoRef.current
+    if (!v) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const pct = (e.clientX - rect.left) / rect.width
+    v.currentTime = pct * v.duration
+  }
+
+  const toggleMute = () => {
+    const v = videoRef.current
+    if (!v) return
+    v.muted = !v.muted
+    setMuted(v.muted)
+  }
 
   return (
-    <div className="relative rounded-3xl overflow-hidden"
-      style={{
-        background: C.white,
+    <div
+      className="relative w-full"
+      style={{ borderRadius: '20px', overflow: 'hidden' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Outer frame */}
+      <div style={{
+        borderRadius: '20px',
+        overflow: 'hidden',
+        boxShadow: '0 28px 72px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.07)',
         border: `1px solid ${C.border}`,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)',
-        width: '100%',
+        background: '#000',
+        aspectRatio: '16 / 9',
+        position: 'relative',
       }}>
+        <video
+          ref={videoRef}
+          src="/src/assets/hero-demo.mp4"
+          className="w-full h-full object-cover"
+          style={{ display: 'block' }}
+          muted
+          loop
+          playsInline
+          onTimeUpdate={onTimeUpdate}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+        />
 
-      {/* App top bar */}
-      <div className="flex items-center justify-between px-4 py-2.5"
-        style={{ borderBottom: `1px solid ${C.border}`, background: C.white }}>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ background: C.indigo }}>
-            <ZapIcon size={12} />
-          </div>
-          <span className="text-sm font-bold" style={{ color: C.text }}>FlowAI</span>
-        </div>
-        <div className="flex-1 mx-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs" style={{ background: C.gray50, border: `1px solid ${C.border}`, color: C.textMuted }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            Search for product
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs" style={{ background: C.gray100, color: C.textSub }}>?</div>
-          <div className="relative">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: C.gray100 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            </div>
-            <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center text-white" style={{ background: C.indigo, fontSize: '7px' }}>3</div>
-          </div>
-          <button className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: C.gray100, color: C.textSub, border: `1px solid ${C.border}` }}>Log in</button>
-          <button className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white" style={{ background: C.indigo }}>Update</button>
-          <div className="w-7 h-7 rounded-full overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=32&h=32&fit=crop&auto=format" alt="" className="w-full h-full object-cover" />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex" style={{ minHeight: '380px' }}>
-        {/* Sidebar */}
-        <div className="flex flex-col gap-0.5 py-4 px-2" style={{ width: '140px', minWidth: '140px', borderRight: `1px solid ${C.border}`, background: C.gray50 }}>
-          <div className="flex items-center gap-2 px-2 py-1.5 mb-2">
-            <div className="w-6 h-6 rounded-md overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=32&h=32&fit=crop&auto=format" alt="" className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <div className="text-xs font-semibold" style={{ color: C.text }}>FlowAI</div>
-              <div className="text-xs" style={{ color: C.textMuted }}>Acme Destined</div>
-            </div>
-          </div>
-          {[
-            { label: 'Overview' },
-            { label: 'Mashboard' },
-            { label: 'Projects', active: true, badge: 'New' },
-            { label: 'Preview' },
-            { label: 'Deliveries' },
-            { label: 'Community' },
-            { label: 'Settings' },
-          ].map(({ label, active, badge }) => (
-            <div key={label} className="flex items-center justify-between px-2 py-1.5 rounded-lg text-xs cursor-pointer transition-all"
-              style={{ background: active ? C.indigoLight : 'transparent', color: active ? C.indigo : C.textSub, fontWeight: active ? 600 : 400 }}>
-              <div className="flex items-center gap-2">
-                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: active ? C.indigo : C.gray400, display: 'inline-block', flexShrink: 0 }} />
-                {label}
-              </div>
-              {badge && <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: C.indigo, color: '#fff', fontSize: '9px' }}>{badge}</span>}
-            </div>
-          ))}
-        </div>
-
-        {/* Main content */}
-        <div className="flex-1 p-4 overflow-hidden">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-base font-bold" style={{ color: C.text }}>Projects</div>
-            <div className="flex gap-2">
-              <button className="px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1" style={{ background: C.gray50, border: `1px solid ${C.border}`, color: C.textSub }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Preview
-              </button>
-              <button className="px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1" style={{ background: C.gray50, border: `1px solid ${C.border}`, color: C.textSub }}>
-                Solulle Race <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Highlight card */}
-          <div className="rounded-xl p-3 mb-3 flex items-center justify-between"
-            style={{ background: `linear-gradient(135deg, ${C.indigo}, #7C3AED)` }}>
-            <div>
-              <div className="text-xs font-medium text-white opacity-80 mb-0.5">Atmospheric Cam</div>
-              <div className="text-sm font-bold text-white">Finalize Q3 roadmap</div>
-              <div className="text-xs text-white opacity-70 mt-1">1 tree process</div>
-            </div>
-            <div className="flex gap-1.5">
-              <div className="w-8 h-8 rounded-lg" style={{ background: 'rgba(255,255,255,0.15)' }} />
-              <div className="w-8 h-8 rounded-lg" style={{ background: 'rgba(255,255,255,0.15)' }} />
-            </div>
-          </div>
-
-          {/* Table header */}
-          <div className="grid text-xs font-semibold px-2 pb-1.5 mb-1" style={{ gridTemplateColumns: '1fr 160px 90px 80px', color: C.textMuted }}>
-            <span>Name</span><span>Case Benefited</span><span>Added Time</span><span></span>
-          </div>
-
-          {/* Rows */}
-          {rows.map((row, i) => (
-            <div key={i} className="grid items-center px-2 py-2 rounded-lg mb-0.5"
-              style={{ gridTemplateColumns: '1fr 160px 90px 80px', background: i === 0 ? C.gray50 : 'transparent' }}>
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                  style={{ background: row.color }}>
-                  {row.avatar}
-                </div>
-                <span className="text-xs font-medium truncate" style={{ color: C.text }}>{row.name}</span>
-              </div>
-              <div>
-                <div className="text-xs truncate" style={{ color: C.textMuted }}>{row.assignee}</div>
-              </div>
-              <div className="text-xs" style={{ color: C.textMuted }}>{row.date}</div>
-              <div>
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${C.mint}15`, color: C.mint }}>
-                  {row.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Right panel */}
-        <div className="p-3 flex flex-col gap-3" style={{ width: '160px', minWidth: '160px', borderLeft: `1px solid ${C.border}` }}>
-          {/* Revenue card */}
-          <div className="rounded-xl p-3" style={{ background: C.indigoLight, border: `1px solid ${C.indigo}20` }}>
-            <div className="text-xs font-medium mb-1" style={{ color: C.textSub }}>Drawe date</div>
-            <div className="text-lg font-bold" style={{ color: C.text }}>$3,600 non</div>
-            <div className="text-xs font-semibold" style={{ color: C.mint }}>↑ 7.31%</div>
-            <div className="mt-2 flex items-end gap-0.5" style={{ height: '28px' }}>
-              {[4,6,5,8,6,9,7,10,8,11].map((h, i) => (
-                <div key={i} className="flex-1 rounded-sm" style={{ height: `${h * 2.4}px`, background: i >= 7 ? C.indigo : C.gray200 }} />
-              ))}
-            </div>
-          </div>
-
-          {/* Assistance card */}
-          <div className="rounded-xl p-3" style={{ background: C.white, border: `1px solid ${C.border}` }}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-semibold" style={{ color: C.text }}>Assistations</div>
-              <span style={{ color: C.textMuted, fontSize: '14px' }}>⋯</span>
-            </div>
-            <div className="text-xs mb-2" style={{ color: C.textMuted }}>Cash plans are five from she d once your business your dehorse.</div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 rounded-full overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1629904853893-c2c8981a1dc5?w=24&h=24&fit=crop&auto=format" alt="" className="w-full h-full object-cover" />
-              </div>
-              <span className="text-xs font-medium" style={{ color: C.text }}>Cehd Moefueri</span>
-            </div>
-          </div>
-
-          {/* Chart card */}
-          <div className="rounded-xl p-3 flex-1" style={{ background: C.white, border: `1px solid ${C.border}` }}>
-            <div className="text-xs font-semibold mb-2" style={{ color: C.text }}>Descondability</div>
-            <svg viewBox="0 0 120 60" className="w-full" style={{ height: '50px' }}>
-              <polyline points="0,55 20,45 40,48 60,30 80,35 100,15 120,20" fill="none" stroke={C.indigo} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <polyline points="0,55 20,45 40,48 60,30 80,35 100,15 120,20 120,60 0,60" fill={`${C.indigo}10`} stroke="none"/>
-            </svg>
-            <div className="flex justify-between text-xs mt-1" style={{ color: C.textMuted }}>
-              <span>Sat 1st</span><span>23 Mar</span><span>24 Mar</span><span>11 M</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Video play overlay */}
-      {!playing && (
+        {/* Gradient overlay — bottom only, for controls legibility */}
         <div
-          className="absolute inset-0 flex items-center justify-center cursor-pointer transition-all"
-          style={{ background: 'rgba(17,24,39,0.12)', borderRadius: '24px' }}
-          onClick={() => setPlaying(true)}
-        >
+          className="absolute bottom-0 left-0 right-0"
+          style={{
+            height: '100px',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)',
+            pointerEvents: 'none',
+            transition: 'opacity 0.25s',
+            opacity: hovered || !playing ? 1 : 0,
+          }}
+        />
+
+        {/* Centre play button — shown when paused */}
+        {!playing && (
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+            className="absolute inset-0 flex items-center justify-center cursor-pointer"
+            onClick={toggle}
+          >
+            <div
+              className="flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+              style={{
+                width: '64px', height: '64px', borderRadius: '50%',
+                background: 'rgba(255,255,255,0.92)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill={C.indigo}>
+                <polygon points="6 3 20 12 6 21 6 3" />
+              </svg>
+            </div>
+          </div>
+        )}
+
+        {/* Controls bar — visible on hover */}
+        <div
+          className="absolute bottom-0 left-0 right-0 px-4 pb-3 pt-2 flex items-center gap-3 transition-opacity duration-200"
+          style={{ opacity: hovered ? 1 : 0 }}
+        >
+          {/* Play/pause */}
+          <button
+            onClick={toggle}
+            className="flex items-center justify-center flex-shrink-0 transition-transform hover:scale-110"
             style={{
-              background: 'rgba(255,255,255,0.95)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              width: '32px', height: '32px', borderRadius: '50%',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              color: '#fff',
+              cursor: 'pointer',
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill={C.indigo}><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            {playing ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            )}
+          </button>
+
+          {/* Progress bar */}
+          <div
+            className="flex-1 rounded-full cursor-pointer"
+            style={{ height: '4px', background: 'rgba(255,255,255,0.25)', position: 'relative' }}
+            onClick={seek}
+          >
+            <div
+              className="absolute left-0 top-0 h-full rounded-full"
+              style={{ width: `${progress}%`, background: C.indigo, transition: 'width 0.1s linear' }}
+            />
+          </div>
+
+          {/* Mute */}
+          <button
+            onClick={toggleMute}
+            className="flex items-center justify-center flex-shrink-0 transition-opacity hover:opacity-80"
+            style={{ color: '#fff', cursor: 'pointer', background: 'transparent', border: 'none' }}
+          >
+            {muted ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              </svg>
+            )}
+          </button>
+
+          {/* FlowAI badge */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full flex-shrink-0"
+            style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: C.indigo }}>
+              <ZapIcon size={9} />
+            </div>
+            <span className="text-xs font-semibold text-white">FlowAI Demo</span>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Caption below */}
+      <div className="flex items-center justify-between mt-3 px-1">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full animate-pulse-dot" style={{ background: C.mint }} />
+          <span className="text-xs font-medium" style={{ color: C.textSub }}>Live product demo · FlowAI Workspace</span>
+        </div>
+        <span className="text-xs" style={{ color: C.textMuted }}>See AI automation in action</span>
+      </div>
     </div>
   )
 }
